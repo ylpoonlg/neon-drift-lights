@@ -66,10 +66,12 @@ public:
    * Update value by scaling the raw value based on the endpoints.
    */
   inline void update_value() {
-    if (raw_val >= ep.c) {
-      value = map(min(raw_val, ep.h), ep.c, ep.h, 0, 100);
+    if (ep.h < ep.l) {
+      if (raw_val <= ep.c) value = map(max(raw_val, ep.h), ep.c, ep.h, 0, 100);
+      else value = map(min(raw_val, ep.l), ep.l, ep.c, -100, 0);
     } else {
-      value = map(max(raw_val, ep.l), ep.l, ep.c, -100, 0);
+      if (raw_val >= ep.c) value = map(min(raw_val, ep.h), ep.c, ep.h, 0, 100);
+      else value = map(max(raw_val, ep.l), ep.l, ep.c, -100, 0);
     }
   }
 
