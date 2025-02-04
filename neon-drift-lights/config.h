@@ -52,6 +52,8 @@
 #define PIN_LED_BRAKE2 16
 // Pin for decel light strip (WS2812B)
 #define PIN_LED_DECEL 14
+// Pin for hazard lights
+#define PIN_LED_HAZARD 15
 // Pin for backfire light
 #define PIN_LED_BACKFIRE 8
 // Pin for status led
@@ -81,3 +83,8 @@
  * Set 0 to enable virtual LED; -1 to disable Serial.
  */
 #define VERBOSE -1
+
+/**
+ * Run dummy test (uncomment to enable)
+ */
+// #define RUN_TEST

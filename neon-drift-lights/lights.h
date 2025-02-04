@@ -55,6 +55,8 @@
  */
 // How often the decel lights updates (in ms)
 #define DECEL_UPDATE_RATE 50
+// Hazard lights blink interval (in ms)
+#define HAZARD_INTERVAL 500
 // Maximum interval between two backfires (in ms)
 #define BACKFIRE_MAX_INTERVAL 200
 // Maximum duration of a backfire (in ms)
@@ -72,6 +74,16 @@
 #define HEAD_LIGHT_MID 64
 #define BRAKE_LIGHT_MAX 255
 #define BRAKE_LIGHT_MID 64
+
+/*
+ * Data structure for blinking lights.
+ */
+struct BlinkData {
+  bool is_enabled;
+  uint32_t start_time;
+  uint32_t interval;
+  uint32_t duration;
+};
 
 void handle_lights(const Channel channels[]);
 

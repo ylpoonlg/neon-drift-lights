@@ -19,7 +19,7 @@ endif
 
 .SILENT:
 
-.PHONY: compile upload serial
+.PHONY: compile upload serial clean
 
 default: compile
 

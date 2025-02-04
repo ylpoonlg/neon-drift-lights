@@ -14,32 +14,17 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <Arduino.h>
 #include "channel.h"
-#include "config.h"
-#include "endpoints.h"
-#include "lights.h"
-#include "tests.h"
-#include "utils.h"
 
-void setup() {
-#if VERBOSE >= 0
-  Serial.begin(115200);
-#endif
-
-  setup_ep_btn();
-  setup_channels();
-  setup_lights();
-}
-
-void loop() {
-#ifdef RUN_TEST
-  do_test();
-#else
-  poll_ep_btn();
-  poll_channels();
-#endif
-
-  handle_lights(channels);
-
-  delay(REFRESH_INTERVAL);
+inline void do_test() {
+  const uint32_t cur_time = millis();
+  const uint32_t time_cyc = (cur_time / 1000) % 20;
+  if (time_cyc < 5) {
+    channels[CH_THROT].value = 100;
+  } else {
+    channels[CH_THROT].value = 0;
+  }
 }

@@ -38,17 +38,40 @@ static inline void handle_head_lights(const Channel channels[]) {
   }
 #else
   static uint32_t idle_st_time = (uint32_t)(-HEADLIGHT_DIM_TIMEOUT);
+  static BlinkData hz_data = {
+    .is_enabled = false,
+    .start_time = millis(),
+    .interval = HAZARD_INTERVAL,
+    .duration = HAZARD_INTERVAL,
+  };
+
   const uint32_t cur_time = millis();
   if (abs(channels[CH_THROT].value) >= 10 || HEADLIGHT_DIM_TIMEOUT < 0) {
     tar_value = HEAD_LIGHT_MAX;
+    hz_data.is_enabled = false;
     idle_st_time = cur_time;
   } else {
     if (cur_time - idle_st_time >= HEADLIGHT_DIM_TIMEOUT) {
       tar_value = HEAD_LIGHT_MID;
+      hz_data.is_enabled = true;
       idle_st_time = cur_time - HEADLIGHT_DIM_TIMEOUT;
     } else {
       tar_value = HEAD_LIGHT_MAX;
+      hz_data.is_enabled = false;
     }
+  }
+
+  if (hz_data.is_enabled) {
+    if (cur_time - hz_data.start_time >= hz_data.interval + hz_data.duration) {
+      digitalWrite(PIN_LED_HAZARD, LOW);
+      hz_data.start_time = cur_time;
+    } else if (cur_time - hz_data.start_time >= hz_data.interval) {
+      digitalWrite(PIN_LED_HAZARD, HIGH);
+    } else {
+      digitalWrite(PIN_LED_HAZARD, LOW);
+    }
+  } else {
+    digitalWrite(PIN_LED_HAZARD, LOW);
   }
 #endif
 
@@ -130,26 +153,30 @@ static inline void handle_decel_lights(const Channel channels[]) {
 static inline void handle_backfire(const Channel channels[]) {
   static CHFilter filter(BACKFIRE_SMOOTHING);
   static int32_t throt_last = 0;
-  static uint32_t bfire_st_time = 0, bfire_int = 0, bfire_dur = 0;
-  static bool bfire_is_on = false;
+  static BlinkData bf_data = {
+    .is_enabled = false,
+    .start_time = millis(),
+    .interval = 0,
+    .duration = 0,
+  };
 
   const uint32_t cur_time = millis();
   const int32_t throt = filter.update_step(channels[CH_THROT].value);
   if ((throt < throt_last && throt_last >= BACKFIRE_THRESH_L) ||
       throt >= BACKFIRE_THRESH_H) {
-    if (!bfire_is_on) {
-      bfire_is_on = true;
-      bfire_st_time = cur_time;
-      bfire_int = random(BACKFIRE_MAX_INTERVAL);
-      bfire_dur = random(BACKFIRE_MAX_DURATION);
+    if (!bf_data.is_enabled) {
+      bf_data.is_enabled = true;
+      bf_data.start_time = cur_time;
+      bf_data.interval = random(BACKFIRE_MAX_INTERVAL);
+      bf_data.duration = random(BACKFIRE_MAX_DURATION);
     }
   }
 
-  if (bfire_is_on) {
-    if (cur_time - bfire_st_time >= bfire_int + bfire_dur) {
+  if (bf_data.is_enabled) {
+    if (cur_time - bf_data.start_time >= bf_data.interval + bf_data.duration) {
       digitalWrite(PIN_LED_BACKFIRE, LOW);
-      bfire_is_on = false;
-    } else if (cur_time - bfire_st_time >= bfire_int) {
+      bf_data.is_enabled = false;
+    } else if (cur_time - bf_data.start_time >= bf_data.interval) {
       digitalWrite(PIN_LED_BACKFIRE, HIGH);
     }
   } else {
@@ -168,6 +195,12 @@ static inline void show_virtual_lights() {
 
   if (digitalRead(PIN_LED_HEAD))
     Serial.print("\033[47m  ");
+  else
+    Serial.print("\033[40m  ");
+  Serial.print("\033[0m | ");
+
+  if (digitalRead(PIN_LED_HAZARD))
+    Serial.print("\033[48;2;255;150;0m  ");
   else
     Serial.print("\033[40m  ");
   Serial.print("\033[0m | ");
@@ -214,6 +247,7 @@ void setup_lights() {
   pinMode(PIN_LED_BRAKE, OUTPUT);
   pinMode(PIN_LED_BRAKE2, OUTPUT);
   pinMode(PIN_LED_DECEL, OUTPUT);
+  pinMode(PIN_LED_HAZARD, OUTPUT);
   pinMode(PIN_LED_BACKFIRE, OUTPUT);
 
   FastLED.addLeds<WS2812B, PIN_LED_DECEL, GRB>(decel_lights, DECEL_LED_PIXELS);
