@@ -95,10 +95,10 @@ static inline void handle_brake_lights(const Channel channels[]) {
   } else {
 #if BRAKE_AS_TAIL_LIGHTS
     tar_value = BRAKE_LIGHT_MID;
-    fill_solid(brake2_lights, BRAKE2_LED_PIXELS, CRGB::Black);
 #else
     tar_value = 0;
 #endif
+    fill_solid(brake2_lights, BRAKE2_LED_PIXELS, CRGB::Black);
   }
 
   analogWrite(PIN_LED_BRAKE, filter.update_step(tar_value));
